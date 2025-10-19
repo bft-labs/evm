@@ -357,6 +357,7 @@ cmd+=(
   --home "$CHAINDIR"
   --json-rpc.api "eth,txpool,personal,net,debug,web3"
   --chain-id "$CHAINID"
+  --memlog
 )
 printf 'Executing: '
 for arg in "${cmd[@]}"; do

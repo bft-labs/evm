@@ -268,8 +268,11 @@ require (
 )
 
 replace (
+	cosmossdk.io/log => github.com/zsystm/cosmos-sdk/log v0.0.0-20251019190943-b98a8e980b0c
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	github.com/cometbft/cometbft => github.com/zsystm/cometbft v0.38.20-0.20251019013026-68caee7dcb2f
+	github.com/cosmos/cosmos-sdk => github.com/zsystm/cosmos-sdk v0.46.0-beta2.0.20251019190943-b98a8e980b0c
 	// use Cosmos geth fork
 	// branch: release/1.16
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1
@@ -277,7 +280,6 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/cometbft/cometbft => github.com/zsystm/cometbft v0.38.x-memlogger
 )
 
 retract v0.4.0
