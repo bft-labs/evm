@@ -190,6 +190,69 @@ tune_timeouts() {
   log "Applied consensus timeout adjustments to all nodes."
 }
 
+# Adjust memlogger settings in app.toml for each node
+adjust_memlogger() {
+  for ((i=0; i< N; i++)); do
+    local APP_TOML="${BASE_DIR}/${NODE_PREFIX}${i}/evmd/config/app.toml"
+    if [ ! -f "$APP_TOML" ]; then
+      err "Missing $APP_TOML"
+      continue
+    fi
+
+    # Helpers local to this function
+    toml_set_key_in_section() {
+      local file="$1" section="$2" key="$3" value="$4"
+      awk -v section="$section" -v key="$key" -v value="$value" '
+        BEGIN { insec=0; done=0 }
+        /^[[:space:]]*\[/ {
+          if (insec && !done) { print key " = \"" value "\""; done=1 }
+          insec=0
+          if ($0 ~ "^\\[" section "\\]") { insec=1 }
+          print; next
+        }
+        {
+          if (insec && $0 ~ "^[[:space:]]*" key "[[:space:]]*=") {
+            print key " = \"" value "\""; done=1; next
+          }
+          print
+        }
+        END {
+          if (insec && !done) { print key " = \"" value "\"" }
+        }
+      ' "$file" >"$file.tmp" && mv "$file.tmp" "$file"
+    }
+
+    toml_set_key_in_section_raw() {
+      local file="$1" section="$2" key="$3" rawvalue="$4"
+      awk -v section="$section" -v key="$key" -v rawvalue="$rawvalue" '
+        BEGIN { insec=0; done=0 }
+        /^[[:space:]]*\[/ {
+          if (insec && !done) { print key " = " rawvalue; done=1 }
+          insec=0
+          if ($0 ~ "^\\[" section "\\]") { insec=1 }
+          print; next
+        }
+        {
+          if (insec && $0 ~ "^[[:space:]]*" key "[[:space:]]*=") {
+            print key " = " rawvalue; done=1; next
+          }
+          print
+        }
+        END {
+          if (insec && !done) { print key " = " rawvalue }
+        }
+      ' "$file" >"$file.tmp" && mv "$file.tmp" "$file"
+    }
+
+    # interval: set to 3m (string)
+    toml_set_key_in_section "$APP_TOML" "memlogger" "interval" "3m"
+    # max-bytes: set to 2GB (2147483648) numeric
+    toml_set_key_in_section_raw "$APP_TOML" "memlogger" "max-bytes" "2147483648"
+
+    log "Adjusted memlogger for ${NODE_PREFIX}${i}: interval=3m, max-bytes=2147483648"
+  done
+}
+
 apply_surge_and_replicate() {
   # Apply surge faucet on node0 genesis, then copy to other nodes
   local g0="${BASE_DIR}/${NODE_PREFIX}0/evmd/config/genesis.json"
@@ -338,6 +401,7 @@ case "$cmd" in
     apply_surge_and_replicate
     adjust_ports_single_host
     tune_timeouts
+    adjust_memlogger
     build_peers_if_possible
     start_nodes
     ;;

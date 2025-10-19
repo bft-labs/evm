@@ -272,10 +272,10 @@ require (
 )
 
 replace (
-	cosmossdk.io/log => github.com/zsystm/cosmos-sdk/log v0.0.0-20251019190943-b98a8e980b0c
+	cosmossdk.io/log => github.com/zsystm/cosmos-sdk/log v0.0.0-20251019213021-f40f441db0f0
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	github.com/cosmos/cosmos-sdk => github.com/zsystm/cosmos-sdk v0.46.0-beta2.0.20251019190943-b98a8e980b0c
+	github.com/cosmos/cosmos-sdk => github.com/zsystm/cosmos-sdk v0.53.4-memlogger-0
 	github.com/cosmos/evm => ../
 	// use Cosmos geth fork
 	// branch: release/1.16

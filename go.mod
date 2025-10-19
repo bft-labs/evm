@@ -268,11 +268,11 @@ require (
 )
 
 replace (
-	cosmossdk.io/log => github.com/zsystm/cosmos-sdk/log v0.0.0-20251019190943-b98a8e980b0c
+	cosmossdk.io/log => github.com/zsystm/cosmos-sdk/log v0.0.0-20251019213021-f40f441db0f0
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cometbft/cometbft => github.com/zsystm/cometbft v0.38.20-0.20251019013026-68caee7dcb2f
-	github.com/cosmos/cosmos-sdk => github.com/zsystm/cosmos-sdk v0.46.0-beta2.0.20251019190943-b98a8e980b0c
+	github.com/cosmos/cosmos-sdk => github.com/zsystm/cosmos-sdk v0.53.4-memlogger-0
 	// use Cosmos geth fork
 	// branch: release/1.16
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1
