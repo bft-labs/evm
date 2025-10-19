@@ -19,6 +19,8 @@ N_DEFAULT=4
 # Start defaults (min gas aligned with local_node.sh)
 MIN_GAS_PRICES_DEFAULT="0atest"
 SURGE_CMD_DEFAULT="surge faucet"     # or override via SURGE_CMD env; extra args via SURGE_ARGS
+CHAIN_ID_DEFAULT="local-4221"        # or override via CHAIN_ID env
+SINGLE_HOST_DEFAULT="true"           # allocate unique ports per node on one host
 
 # Derive settings from env or defaults
 BINARY=${BINARY:-$BINARY_DEFAULT}
@@ -28,6 +30,8 @@ N=${N:-$N_DEFAULT}
 MIN_GAS_PRICES=${MIN_GAS_PRICES:-$MIN_GAS_PRICES_DEFAULT}
 SURGE_CMD=${SURGE_CMD:-$SURGE_CMD_DEFAULT}
 SURGE_ARGS=${SURGE_ARGS:-}
+CHAIN_ID=${CHAIN_ID:-$CHAIN_ID_DEFAULT}
+SINGLE_HOST=${SINGLE_HOST:-$SINGLE_HOST_DEFAULT}
 
 # Internal
 PID_FILE="${BASE_DIR}/evmd_localnet.pids"
@@ -60,11 +64,101 @@ init_fresh() {
     --keyring-backend test \
     --output-dir "${BASE_DIR}")
 
+  # Add chain-id if supported by the subcommand
+  if "$BINARY" testnet init-files --help 2>/dev/null | grep -q -- "--chain-id"; then
+    cmd+=(--chain-id "${CHAIN_ID}")
+  fi
+  # Use single-host ports from generator if supported
+  if [ "${SINGLE_HOST}" = "true" ] && "$BINARY" testnet init-files --help 2>/dev/null | grep -q -- "--single-host"; then
+    cmd+=(--single-host)
+  fi
+
   printf '[evmd-localnet] Exec: '
   for a in "${cmd[@]}"; do printf '%s ' "$a"; done; printf '\n'
   "${cmd[@]}"
 
-  log "Init complete. Genesis and configs under ${BASE_DIR}/${NODE_PREFIX}{0..$((N-1))}/evmd"
+  log "Init complete (chain-id: ${CHAIN_ID}). Genesis and configs under ${BASE_DIR}/${NODE_PREFIX}{0..$((N-1))}/evmd"
+
+  # Fallback: if init-files doesn't support --chain-id, patch genesis chain_id via jq
+  if ! "$BINARY" testnet init-files --help 2>/dev/null | grep -q -- "--chain-id"; then
+    if command -v jq >/dev/null 2>&1; then
+      for ((i=0; i< N; i++)); do
+        gi="${BASE_DIR}/${NODE_PREFIX}${i}/evmd/config/genesis.json"
+        if [ -f "$gi" ]; then
+          tmp="$gi.tmp" && jq --arg cid "$CHAIN_ID" '.chain_id=$cid' "$gi" > "$tmp" && mv "$tmp" "$gi"
+        fi
+      done
+      log "Patched genesis chain_id to '${CHAIN_ID}' via jq (fallback path)."
+    else
+      log "jq not found; cannot patch genesis chain_id. Using defaults from init-files."
+    fi
+  fi
+}
+
+# Update per-node ports for single host to avoid conflicts
+adjust_ports_single_host() {
+  if [ "${SINGLE_HOST}" != "true" ]; then
+    log "SINGLE_HOST is not enabled; skipping port adjustments."
+    return 0
+  fi
+
+  # Helper to set a key inside a specific TOML section
+  toml_set_key_in_section() {
+    local file="$1" section="$2" key="$3" value="$4"
+    awk -v section="$section" -v key="$key" -v value="$value" '
+      BEGIN { insec=0; done=0 }
+      /^[[:space:]]*\[/ {
+        if (insec && !done) { print key " = \"" value "\""; done=1 }
+        insec=0
+        if ($0 ~ "^\\[" section "\\]") { insec=1 }
+        print; next
+      }
+      {
+        if (insec && $0 ~ "^[[:space:]]*" key "[[:space:]]*=") {
+          print key " = \"" value "\""; done=1; next
+        }
+        print
+      }
+      END {
+        if (insec && !done) { print key " = \"" value "\"" }
+      }
+    ' "$file" >"$file.tmp" && mv "$file.tmp" "$file"
+  }
+
+  for ((i=0; i< N; i++)); do
+    local home_dir="${BASE_DIR}/${NODE_PREFIX}${i}/evmd"
+    local cfg_tm="${home_dir}/config/config.toml"
+    local cfg_app="${home_dir}/config/app.toml"
+
+    [ -f "$cfg_tm" ] || { err "Missing $cfg_tm"; continue; }
+    [ -f "$cfg_app" ] || { err "Missing $cfg_app"; continue; }
+
+    # Compute unique ports
+    local rpc_port=$((26657 + i))
+    local p2p_port=$((16656 + i))
+    local pprof_port=$((6060 + i))
+    local prom_port=$((26660 + i))
+    local api_port=$((1317 + i))
+    local grpc_port=$((9090 + i))
+    local grpcweb_port=$((9091 + i))
+    local http_port=$((8545 + i*10))
+    local ws_port=$((8546 + i*10))
+
+    # Tendermint config.toml
+    toml_set_key_in_section "$cfg_tm" "rpc" "laddr" "tcp://127.0.0.1:${rpc_port}"
+    toml_set_key_in_section "$cfg_tm" "rpc" "pprof_laddr" "localhost:${pprof_port}"
+    toml_set_key_in_section "$cfg_tm" "p2p" "laddr" "tcp://127.0.0.1:${p2p_port}"
+    toml_set_key_in_section "$cfg_tm" "instrumentation" "prometheus_listen_addr" ":${prom_port}"
+
+    # Application app.toml
+    toml_set_key_in_section "$cfg_app" "api" "address" "tcp://127.0.0.1:${api_port}"
+    toml_set_key_in_section "$cfg_app" "grpc" "address" "127.0.0.1:${grpc_port}"
+    toml_set_key_in_section "$cfg_app" "grpc-web" "address" "127.0.0.1:${grpcweb_port}"
+    toml_set_key_in_section "$cfg_app" "json-rpc" "address" "127.0.0.1:${http_port}"
+    toml_set_key_in_section "$cfg_app" "json-rpc" "ws-address" "127.0.0.1:${ws_port}"
+
+    log "Configured ${NODE_PREFIX}${i} ports: rpc:${rpc_port} p2p:${p2p_port} api:${api_port} http:${http_port} ws:${ws_port} grpc:${grpc_port}/${grpcweb_port}"
+  done
 }
 
 apply_surge_and_replicate() {
@@ -162,12 +256,16 @@ start_nodes() {
 
     log "Starting ${NODE_PREFIX}${i} (rpc:${rpc_port}, p2p:${p2p_port}, api:${api_port}, http:${http_port}, ws:${ws_port})"
 
+    # Ensure client chain-id is set for this home (useful for CLI interactions)
+    "$BINARY" config set client chain-id "${CHAIN_ID}" --home "$home_dir" >/dev/null 2>&1 || true
+
     # Build start command (aligned with local_node.sh gas defaults) and echo it for reproducibility
     cmd=("$BINARY" start \
       --home "$home_dir" \
       --minimum-gas-prices "${MIN_GAS_PRICES}" \
       --evm.min-tip 0 \
-      --json-rpc.api "eth,txpool,personal,net,debug,web3"
+      --json-rpc.api "eth,txpool,personal,net,debug,web3" \
+      --chain-id "${CHAIN_ID}"
       --memlog=true)
 
     printf '[evmd-localnet] Exec: '
@@ -209,6 +307,7 @@ case "$cmd" in
     ensure_binary
     init_fresh
     apply_surge_and_replicate
+    adjust_ports_single_host
     build_peers_if_possible
     start_nodes
     ;;
