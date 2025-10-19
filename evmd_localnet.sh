@@ -168,7 +168,7 @@ start_nodes() {
       --minimum-gas-prices "${MIN_GAS_PRICES}" \
       --evm.min-tip 0 \
       --json-rpc.api "eth,txpool,personal,net,debug,web3"
-      --memlog)
+      --memlog=true)
 
     printf '[evmd-localnet] Exec: '
     for arg in "${cmd[@]}"; do printf '%s ' "$arg"; done; printf '\n'
