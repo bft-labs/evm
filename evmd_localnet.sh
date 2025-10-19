@@ -21,6 +21,7 @@ MIN_GAS_PRICES_DEFAULT="0atest"
 SURGE_CMD_DEFAULT="surge faucet"     # or override via SURGE_CMD env; extra args via SURGE_ARGS
 CHAIN_ID_DEFAULT="local-4221"        # or override via CHAIN_ID env
 SINGLE_HOST_DEFAULT="true"           # allocate unique ports per node on one host
+STARTING_IP_DEFAULT="127.0.0.1"      # starting IP for init-files on single host
 
 # Derive settings from env or defaults
 BINARY=${BINARY:-$BINARY_DEFAULT}
@@ -32,6 +33,7 @@ SURGE_CMD=${SURGE_CMD:-$SURGE_CMD_DEFAULT}
 SURGE_ARGS=${SURGE_ARGS:-}
 CHAIN_ID=${CHAIN_ID:-$CHAIN_ID_DEFAULT}
 SINGLE_HOST=${SINGLE_HOST:-$SINGLE_HOST_DEFAULT}
+STARTING_IP_ADDRESS=${STARTING_IP_ADDRESS:-$STARTING_IP_DEFAULT}
 
 # Internal
 PID_FILE="${BASE_DIR}/evmd_localnet.pids"
@@ -70,7 +72,11 @@ init_fresh() {
   fi
   # Use single-host ports from generator if supported
   if [ "${SINGLE_HOST}" = "true" ] && "$BINARY" testnet init-files --help 2>/dev/null | grep -q -- "--single-host"; then
-    cmd+=(--single-host)
+    cmd+=(--single-host=true)
+  fi
+  # Set starting IP address if supported (helps ensure 127.0.0.1 mapping)
+  if [ "${SINGLE_HOST}" = "true" ] && "$BINARY" testnet init-files --help 2>/dev/null | grep -q -- "--starting-ip-address"; then
+    cmd+=(--starting-ip-address "${STARTING_IP_ADDRESS}")
   fi
 
   printf '[evmd-localnet] Exec: '
@@ -159,6 +165,29 @@ adjust_ports_single_host() {
 
     log "Configured ${NODE_PREFIX}${i} ports: rpc:${rpc_port} p2p:${p2p_port} api:${api_port} http:${http_port} ws:${ws_port} grpc:${grpc_port}/${grpcweb_port}"
   done
+}
+
+# Apply consensus timeout adjustments similar to local_node.sh
+tune_timeouts() {
+  for ((i=0; i< N; i++)); do
+    local CONFIG_TOML="${BASE_DIR}/${NODE_PREFIX}${i}/evmd/config/config.toml"
+    if [ ! -f "$CONFIG_TOML" ]; then
+      err "Missing $CONFIG_TOML"
+      continue
+    fi
+    # Logging: debug level and json format
+    sed -i.bak 's/log_level = "info"/log_level = "debug"/g' "$CONFIG_TOML"
+    sed -i.bak 's/log_format = "plain"/log_format = "json"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_propose = "3s"/timeout_propose = "2s"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "200ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_prevote = "1s"/timeout_prevote = "500ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "200ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_precommit = "1s"/timeout_precommit = "500ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_commit = "5s"/timeout_commit = "1s"/g' "$CONFIG_TOML"
+    sed -i.bak 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "5s"/g' "$CONFIG_TOML"
+  done
+  log "Applied consensus timeout adjustments to all nodes."
 }
 
 apply_surge_and_replicate() {
@@ -308,6 +337,7 @@ case "$cmd" in
     init_fresh
     apply_surge_and_replicate
     adjust_ports_single_host
+    tune_timeouts
     build_peers_if_possible
     start_nodes
     ;;
