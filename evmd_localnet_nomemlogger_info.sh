@@ -245,12 +245,6 @@ adjust_memlogger() {
 
     # disable
     toml_set_key_in_section "$APP_TOML" "memlogger" "enabled" "false"
-    # interval: set to 3m (string)
-    toml_set_key_in_section "$APP_TOML" "memlogger" "interval" "3m"
-    # max-bytes: set to 2GB (2147483648) numeric
-    toml_set_key_in_section_raw "$APP_TOML" "memlogger" "max-bytes" "2147483648"
-
-    log "Adjusted memlogger for ${NODE_PREFIX}${i}: interval=3m, max-bytes=2147483648"
   done
 }
 
