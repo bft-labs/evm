@@ -253,6 +253,22 @@ func NewExampleApp(
 		os.Exit(1)
 	}
 
+	// Always enable in-memory listeners on all KV stores so we can retrieve the
+	// per-block change set at commit time, regardless of external streaming config.
+	{
+		var exposeStoreKeys []storetypes.StoreKey
+		for _, k := range keys {
+			exposeStoreKeys = append(exposeStoreKeys, k)
+		}
+		bApp.CommitMultiStore().AddListeners(exposeStoreKeys)
+
+		// Append our in-process debug change logger to the streaming manager so it
+		// receives the commit-time change set and logs a summary.
+		sm := bApp.StreamingManager()
+		sm.ABCIListeners = append(sm.ABCIListeners, &DebugChangeLogger{})
+		bApp.SetStreamingManager(sm)
+	}
+
 	// wire up the versiondb's `StreamingService` and `MultiStore`.
 	if cast.ToBool(appOpts.Get("versiondb.enable")) {
 		panic("version db not supported in this example chain")
@@ -405,7 +421,7 @@ func NewExampleApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
