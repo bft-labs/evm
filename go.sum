@@ -719,7 +719,9 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
+github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-4 h1:rw+QqieYGCALStm7c3bAhz62PDQFy0JvI2+dkf0EQgI=
 github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-4/go.mod h1:6k6Po9k9tVsUCRsnjpL6kGzTqjPnwgabQg8htKRMtVc=
+github.com/bft-labs/cosmos-sdk/log v1.5.2-0.20251102063934-dab46c0df9d1 h1:PwAbsEgQ7WQpnJBNOQJMuFc84TLJzmC7bJpTaqrXNcE=
 github.com/bft-labs/cosmos-sdk/log v1.5.2-0.20251102063934-dab46c0df9d1/go.mod h1:DNJwlhYlZOlSePMdymnpTcI8XDar9qn+m8o1fJC7olc=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ00z/TKoufEY6K/a0k6AhaJrQKdFe6OfVXsa4=
