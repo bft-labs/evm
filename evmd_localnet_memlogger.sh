@@ -361,7 +361,24 @@ start_nodes() {
     for arg in "${cmd[@]}"; do printf '%s ' "$arg"; done; printf '\n'
 
     # Start in background, capture PID
-    ("${cmd[@]}" >"$log_file" 2>&1 & echo $! >> "$PID_FILE")
+    # Consensus break testing: Enable on specific node(s) to cause AppHash mismatch
+    # Simulates multi-node desync scenarios (AppHash mismatch, network delays)
+    # Current: node0 only
+    # Example configurations:
+    #   - Multiple nodes: if [ $i -eq 0 ] || [ $i -eq 1 ]; then
+    #   - Different node: if [ $i -eq 2 ]; then
+    #   - With network delay: CONSENSUS_BREAK_DELAY_MS=100
+    #
+    # Fast Sync Test: After node0 stops at height ~3, others continue to height 100+
+    #   1. Kill node0: kill $(head -1 ./.testnets/evmd_localnet.pids)
+    #   2. Wait for others to reach height 100+
+    #   3. Restart node0 without CONSENSUS_BREAK → fast sync attempts, fails due to AppHash mismatch
+    if [ $i -eq 0 ]; then
+      log "  → node0: CONSENSUS BREAK ENABLED (interval=2)"
+      (ENABLE_CONSENSUS_BREAK=true CONSENSUS_BREAK_INTERVAL=2 "${cmd[@]}" >"$log_file" 2>&1 & echo $! >> "$PID_FILE")
+    else
+      ("${cmd[@]}" >"$log_file" 2>&1 & echo $! >> "$PID_FILE")
+    fi
     sleep 0.5
   done
 
