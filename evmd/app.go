@@ -9,6 +9,7 @@ import (
 
 	"os"
 
+	streamingabci "cosmossdk.io/store/streaming/abci"
 	"github.com/spf13/cast"
 
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
@@ -265,7 +266,7 @@ func NewExampleApp(
 		// Append our in-process debug change logger to the streaming manager so it
 		// receives the commit-time change set and logs a summary.
 		sm := bApp.StreamingManager()
-		sm.ABCIListeners = append(sm.ABCIListeners, &DebugChangeLogger{})
+		sm.ABCIListeners = append(sm.ABCIListeners, &streamingabci.DebugChangeLogger{})
 		bApp.SetStreamingManager(sm)
 	}
 
