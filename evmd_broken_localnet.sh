@@ -23,8 +23,8 @@ SINGLE_HOST_DEFAULT="true"
 STARTING_IP_DEFAULT="127.0.0.1"
 
 # Cosmos SDK versions
-COSMOS_SDK_NORMAL="github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-4"
-COSMOS_SDK_BROKEN="github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-break-0"
+COSMOS_SDK_NORMAL="github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger"
+COSMOS_SDK_BROKEN="github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger-apphash-break-0"
 
 # Derive settings from env or defaults
 BASE_DIR=${BASE_DIR:-$BASE_DIR_DEFAULT}
@@ -67,12 +67,10 @@ setup_binaries() {
   fi
 
   # Build normal binary
-  log "Building normal evmd binary (cosmos-sdk v0.53.4-memlogger-4)..."
+  log "Building normal evmd binary (cosmos-sdk ${COSMOS_SDK_NORMAL})..."
   log "Updating go.mod files to use ${COSMOS_SDK_NORMAL}"
-  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-break-[0-9]*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_NORMAL}|" go.mod
-  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-[0-9]*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_NORMAL}|" go.mod
-  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-break-[0-9]*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_NORMAL}|" evmd/go.mod
-  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-[0-9]*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_NORMAL}|" evmd/go.mod
+  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger.*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_NORMAL}|" go.mod
+  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger.*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_NORMAL}|" evmd/go.mod
 
   log "Running go mod tidy in root..."
   go mod tidy
@@ -91,10 +89,10 @@ setup_binaries() {
   log "Normal binary saved to ${BINARY_NORMAL}"
 
   # Build broken binary with consensus_break tag
-  log "Building broken evmd binary (cosmos-sdk v0.53.4-memlogger-break-0 + BUILD_TAGS=consensus_break)..."
+  log "Building broken evmd binary (cosmos-sdk ${COSMOS_SDK_BROKEN} + BUILD_TAGS=consensus_break)..."
   log "Updating go.mod files to use ${COSMOS_SDK_BROKEN}"
-  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-[0-9]*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_BROKEN}|" go.mod
-  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-memlogger-[0-9]*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_BROKEN}|" evmd/go.mod
+  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger.*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_BROKEN}|" go.mod
+  sed -i '' "s|github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger.*|github.com/cosmos/cosmos-sdk => ${COSMOS_SDK_BROKEN}|" evmd/go.mod
 
   log "Running go mod tidy in root..."
   go mod tidy
