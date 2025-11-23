@@ -9,14 +9,15 @@ import (
 
 	"os"
 
+	streamingabci "cosmossdk.io/store/streaming/abci"
 	"github.com/spf13/cast"
 
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
 	"github.com/ethereum/go-ethereum/common"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
-	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 
 	dbm "github.com/cosmos/cosmos-db"
 	evmante "github.com/cosmos/evm/ante"
@@ -253,6 +254,22 @@ func NewExampleApp(
 		os.Exit(1)
 	}
 
+	// Always enable in-memory listeners on all KV stores so we can retrieve the
+	// per-block change set at commit time, regardless of external streaming config.
+	{
+		var exposeStoreKeys []storetypes.StoreKey
+		for _, k := range keys {
+			exposeStoreKeys = append(exposeStoreKeys, k)
+		}
+		bApp.CommitMultiStore().AddListeners(exposeStoreKeys)
+
+		// Append our in-process debug change logger to the streaming manager so it
+		// receives the commit-time change set and logs a summary.
+		sm := bApp.StreamingManager()
+		sm.ABCIListeners = append(sm.ABCIListeners, &streamingabci.DebugChangeLogger{})
+		bApp.SetStreamingManager(sm)
+	}
+
 	// wire up the versiondb's `StreamingService` and `MultiStore`.
 	if cast.ToBool(appOpts.Get("versiondb.enable")) {
 		panic("version db not supported in this example chain")
@@ -405,7 +422,7 @@ func NewExampleApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
