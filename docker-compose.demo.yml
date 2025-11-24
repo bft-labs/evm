@@ -1,0 +1,218 @@
+version: "3"
+
+services:
+  # --------------------------------------------------------------------------
+  # Setup Service (Initialize Data)
+  # --------------------------------------------------------------------------
+  setup:
+    container_name: setup
+    build:
+      context: ../evm
+      dockerfile: contrib/images/evmd-env/Dockerfile
+    user: root
+    entrypoint: []
+    command: |
+      sh -c "
+      if [ ! -f /data/node0/evmd/config/genesis.json ]; then
+        echo 'Initializing testnet data...'
+        evmd testnet init-files --validator-count 4 --output-dir /data --chain-id ${CHAIN_ID:-local-test-1234} --keyring-backend test
+
+        echo 'Configuring network binding...'
+        find /data -name config.toml -exec sed -i 's/127.0.0.1/0.0.0.0/g' {} +
+
+        echo 'Enabling MemLogger...'
+        find /data -name app.toml -exec sed -i 's/enabled = false/enabled = true/g' {} +
+
+        echo 'Configuring persistent peers...'
+        PEERS=\"\"
+        for i in 0 1 2 3; do
+          NODE_ID=$$(evmd comet show-node-id --home /data/node$$i/evmd)
+          PEER=\"$$NODE_ID@evmdnode$$i:26656\"
+          if [ -z \"$$PEERS\" ]; then PEERS=\"$$PEER\"; else PEERS=\"$$PEERS,$$PEER\"; fi
+        done
+        echo \"Peers: $$PEERS\"
+        find /data -name config.toml -exec sed -i \"s/^persistent_peers = .*/persistent_peers = \\\"$$PEERS\\\"/\" {} +
+
+        echo 'Fixing permissions...'
+        chown -R 1025:1025 /data
+      else
+        echo 'Testnet data already exists.'
+      fi
+      "
+    volumes:
+      - ./.testnets:/data:Z
+
+  # --------------------------------------------------------------------------
+  # EVM Node 0 & Shipper 0
+  # --------------------------------------------------------------------------
+  evmdnode0:
+    container_name: evmdnode0
+    build:
+      context: ../evm
+      dockerfile: contrib/images/evmd-env/Dockerfile
+    environment:
+      - DEBUG=0
+      - ID=0
+      - LOG=${LOG:-evmd.log}
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    command: start --chain-id ${CHAIN_ID:-local-test-1234} --minimum-gas-prices 0atest --json-rpc.enable true --json-rpc.api eth,txpool,personal,net,debug,web3
+    ports:
+      - "26656-26657:26656-26657"
+      - "1317:1317"
+      - "8545:8545"
+    volumes:
+      - ./.testnets:/data:Z
+    networks:
+      - localnet
+
+  walship0:
+    container_name: walship0
+    restart: always
+    build:
+      context: ../cosmos-analyzer-shipper
+      dockerfile: Dockerfile
+    depends_on:
+      - evmdnode0
+    volumes:
+      # Mount the same data directory to access node config and WAL
+      - ./.testnets:/data:ro
+    environment:
+      # Point to the specific node's root directory inside the volume
+      - WALSHIP_ROOT=/data/node0/evmd
+      # Remote analytics backend URL
+      - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+    networks:
+      - localnet
+
+  # --------------------------------------------------------------------------
+  # EVM Node 1 & Shipper 1
+  # --------------------------------------------------------------------------
+  evmdnode1:
+    container_name: evmdnode1
+    build:
+      context: ../evm
+      dockerfile: contrib/images/evmd-env/Dockerfile
+    environment:
+      - DEBUG=0
+      - ID=1
+      - LOG=${LOG:-evmd.log}
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    command: start --chain-id ${CHAIN_ID:-local-test-1234} --minimum-gas-prices 0atest --json-rpc.enable true --json-rpc.api eth,txpool,personal,net,debug,web3
+    ports:
+      - "26666-26667:26656-26657"
+      - "1318:1317"
+      - "8555:8545"
+    volumes:
+      - ./.testnets:/data:Z
+    networks:
+      - localnet
+
+  walship1:
+    container_name: walship1
+    restart: always
+    build:
+      context: ../cosmos-analyzer-shipper
+      dockerfile: Dockerfile
+    depends_on:
+      - evmdnode1
+    volumes:
+      - ./.testnets:/data:ro
+    environment:
+      - WALSHIP_ROOT=/data/node1/evmd
+      - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+    networks:
+      - localnet
+
+  # --------------------------------------------------------------------------
+  # EVM Node 2 & Shipper 2
+  # --------------------------------------------------------------------------
+  evmdnode2:
+    container_name: evmdnode2
+    build:
+      context: ../evm
+      dockerfile: contrib/images/evmd-env/Dockerfile
+    environment:
+      - DEBUG=0
+      - ID=2
+      - LOG=${LOG:-evmd.log}
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    command: start --chain-id ${CHAIN_ID:-local-test-1234} --minimum-gas-prices 0atest --json-rpc.enable true --json-rpc.api eth,txpool,personal,net,debug,web3
+    ports:
+      - "26676-26677:26656-26657"
+      - "1319:1317"
+      - "8565:8545"
+    volumes:
+      - ./.testnets:/data:Z
+    networks:
+      - localnet
+
+  walship2:
+    container_name: walship2
+    restart: always
+    build:
+      context: ../cosmos-analyzer-shipper
+      dockerfile: Dockerfile
+    depends_on:
+      - evmdnode2
+    volumes:
+      - ./.testnets:/data:ro
+    environment:
+      - WALSHIP_ROOT=/data/node2/evmd
+      - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+    networks:
+      - localnet
+
+  # --------------------------------------------------------------------------
+  # EVM Node 3 & Shipper 3
+  # --------------------------------------------------------------------------
+  evmdnode3:
+    container_name: evmdnode3
+    build:
+      context: ../evm
+      dockerfile: contrib/images/evmd-env/Dockerfile
+    environment:
+      - DEBUG=0
+      - ID=3
+      - LOG=${LOG:-evmd.log}
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    command: start --chain-id ${CHAIN_ID:-local-test-1234} --minimum-gas-prices 0atest --json-rpc.enable true --json-rpc.api eth,txpool,personal,net,debug,web3
+    ports:
+      - "26686-26687:26656-26657"
+      - "1320:1317"
+      - "8575:8545"
+    volumes:
+      - ./.testnets:/data:Z
+    networks:
+      - localnet
+
+  walship3:
+    container_name: walship3
+    restart: always
+    build:
+      context: ../cosmos-analyzer-shipper
+      dockerfile: Dockerfile
+    depends_on:
+      - evmdnode3
+    volumes:
+      - ./.testnets:/data:ro
+    environment:
+      - WALSHIP_ROOT=/data/node3/evmd
+      - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+    networks:
+      - localnet
+
+networks:
+  localnet:
+    driver: bridge
