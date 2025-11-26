@@ -630,8 +630,6 @@ cosmossdk.io/math v1.5.3 h1:WH6tu6Z3AUCeHbeOSHg2mt9rnoiUWVWaQ2t6Gkll96U=
 cosmossdk.io/math v1.5.3/go.mod h1:uqcZv7vexnhMFJF+6zh9EWdm/+Ylyln34IvPnBauPCQ=
 cosmossdk.io/schema v1.1.0 h1:mmpuz3dzouCoyjjcMcA/xHBEmMChN+EHh8EHxHRHhzE=
 cosmossdk.io/schema v1.1.0/go.mod h1:Gb7pqO+tpR+jLW5qDcNOSv0KtppYs7881kfzakguhhI=
-cosmossdk.io/store v1.1.2 h1:3HOZG8+CuThREKv6cn3WSohAc6yccxO3hLzwK6rBC7o=
-cosmossdk.io/store v1.1.2/go.mod h1:60rAGzTHevGm592kFhiUVkNC9w7gooSEn5iUBPzHQ6A=
 cosmossdk.io/tools/confix v0.1.2 h1:2hoM1oFCNisd0ltSAAZw2i4ponARPmlhuNu3yy0VwI4=
 cosmossdk.io/tools/confix v0.1.2/go.mod h1:7XfcbK9sC/KNgVGxgLM0BrFbVcR/+6Dg7MFfpx7duYo=
 cosmossdk.io/x/evidence v0.2.0 h1:o72zbmgCM7U0v7z7b0XnMB+NqX0tFamqb1HHkQbhrZ0=
@@ -723,6 +721,8 @@ github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger h1:5pRPFmW3HddXynFY41g
 github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger/go.mod h1:SICzd8okv4I/osxz6esxbcQiHimH0CYIP6SBK8CfR7c=
 github.com/bft-labs/cosmos-sdk/log v1.5.2-0.20251123071421-2a53c378ae57 h1:lu67DO6o5HkwXpM+foswKUMiiaKuV/as6SC/Luv0Gm4=
 github.com/bft-labs/cosmos-sdk/log v1.5.2-0.20251123071421-2a53c378ae57/go.mod h1:/nr+xEg1LA3FHTsBBwwzrft0oQXsoFfdAwuSNXBQn0U=
+github.com/bft-labs/cosmos-sdk/store v1.10.0-rc.1.0.20251123071421-2a53c378ae57 h1:isQ928HvH1wP9SS2fr8cGoALSMg6crdiOfX/bFflwYM=
+github.com/bft-labs/cosmos-sdk/store v1.10.0-rc.1.0.20251123071421-2a53c378ae57/go.mod h1:i2O3FQWKx1kawKvwQ5dTOdYEfh2SKvPVrgMP154uqPE=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ00z/TKoufEY6K/a0k6AhaJrQKdFe6OfVXsa4=
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=

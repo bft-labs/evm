@@ -279,6 +279,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger
 	github.com/cosmos/evm => ../
+
 	// use Cosmos geth fork
 	// branch: release/1.16
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1
