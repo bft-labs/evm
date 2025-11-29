@@ -7,7 +7,7 @@ services:
   setup:
     container_name: setup
     build:
-      context: ../evm
+      context: .
       dockerfile: contrib/images/evmd-env/Dockerfile
     user: root
     entrypoint: []
@@ -50,7 +50,7 @@ services:
   evmdnode0:
     container_name: evmdnode0
     build:
-      context: ../evm
+      context: .
       dockerfile: contrib/images/evmd-env/Dockerfile
     environment:
       - DEBUG=0
@@ -95,7 +95,7 @@ services:
   evmdnode1:
     container_name: evmdnode1
     build:
-      context: ../evm
+      context: .
       dockerfile: contrib/images/evmd-env/Dockerfile
     environment:
       - DEBUG=0
@@ -137,7 +137,7 @@ services:
   evmdnode2:
     container_name: evmdnode2
     build:
-      context: ../evm
+      context: .
       dockerfile: contrib/images/evmd-env/Dockerfile
     environment:
       - DEBUG=0
@@ -179,7 +179,7 @@ services:
   evmdnode3:
     container_name: evmdnode3
     build:
-      context: ../evm
+      context: .
       dockerfile: contrib/images/evmd-env/Dockerfile
     environment:
       - DEBUG=0
