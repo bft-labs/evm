@@ -176,11 +176,9 @@ NODE_SERVICE
   cat >> "$COMPOSE_FILE" <<SHIPPER_SERVICE
   # Shipper $i
   walship$i:
+    image: ghcr.io/bft-labs/cosmos-analyzer-shipper:latest
     container_name: walship$i
     restart: always
-    build:
-      context: ../cosmos-analyzer-shipper
-      dockerfile: Dockerfile
     depends_on:
       - evmdnode$i
     volumes:
