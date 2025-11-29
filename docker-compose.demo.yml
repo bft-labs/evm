@@ -31,7 +31,9 @@ services:
           if [ -z \"$$PEERS\" ]; then PEERS=\"$$PEER\"; else PEERS=\"$$PEERS,$$PEER\"; fi
         done
         echo \"Peers: $$PEERS\"
-        find /data -name config.toml -exec sed -i \"s/^persistent_peers = .*/persistent_peers = \\\"$$PEERS\\\"/\" {} +
+        for i in 0 1 2 3; do
+          sed -i \"s|^persistent_peers = .*|persistent_peers = \\\"$$PEERS\\\"|\" /data/node$$i/evmd/config/config.toml
+        done
 
         echo 'Fixing permissions...'
         chown -R 1025:1025 /data
@@ -83,7 +85,7 @@ services:
       - WALSHIP_ROOT=/data/node0/evmd
       # Remote analytics backend URL
       - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
-      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-5a21c5c5dcf34b1aad1eafff1d0e6653}
     networks:
       - localnet
 
@@ -125,7 +127,7 @@ services:
     environment:
       - WALSHIP_ROOT=/data/node1/evmd
       - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
-      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-5a21c5c5dcf34b1aad1eafff1d0e6653}
     networks:
       - localnet
 
@@ -167,7 +169,7 @@ services:
     environment:
       - WALSHIP_ROOT=/data/node2/evmd
       - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
-      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-5a21c5c5dcf34b1aad1eafff1d0e6653}
     networks:
       - localnet
 
@@ -209,7 +211,7 @@ services:
     environment:
       - WALSHIP_ROOT=/data/node3/evmd
       - WALSHIP_REMOTE_URL=${WALSHIP_REMOTE_URL:-http://host.docker.internal:8080/v1/ingest/wal-frames}
-      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-dev-local-test-1234}
+      - WALSHIP_AUTH_KEY=${WALSHIP_AUTH_KEY:-5a21c5c5dcf34b1aad1eafff1d0e6653}
     networks:
       - localnet
 
