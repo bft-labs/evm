@@ -273,6 +273,11 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
   sed -i.bak 's/enabled = false/enabled = true/g' "$APP_TOML"
   sed -i.bak 's/enable = false/enable = true/g' "$APP_TOML"
 
+  # loggers
+  sed -i.bak 's/log_level = "info"/log_level = "debug"/g' "$CONFIG_TOML"
+  sed -i.bak 's/log_format = "plain"/log_format = "json"/g' "$CONFIG_TOML"
+
+
   # --------- maybe generate additional users ---------
   # start with provided/default list
   final_mnemonics=("${dev_mnemonics[@]}")
@@ -337,12 +342,25 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
   fi
 fi
 
+
 # Start the node
-evmd start "$TRACE" \
-	--pruning nothing \
-	--log_level $LOGLEVEL \
-	--minimum-gas-prices=0atest \
-	--evm.min-tip=0 \
-	--home "$CHAINDIR" \
-	--json-rpc.api eth,txpool,personal,net,debug,web3 \
-	--chain-id "$CHAINID"
+# Echo the full command with all parameters for transparency (no shell-escaping)
+cmd=(evmd start)
+if [[ -n "$TRACE" ]]; then
+  cmd+=("$TRACE")
+fi
+cmd+=(
+  --pruning nothing
+  --log_level "$LOGLEVEL"
+  --minimum-gas-prices=0atest
+  --evm.min-tip=0
+  --home "$CHAINDIR"
+  --json-rpc.api "eth,txpool,personal,net,debug,web3"
+  --chain-id "$CHAINID"
+  --memlog=true
+)
+printf 'Executing: '
+for arg in "${cmd[@]}"; do
+  printf '%s ' "$arg"
+done
+printf '\n'
