@@ -269,7 +269,7 @@ require (
 )
 
 replace (
-	cosmossdk.io/store => github.com/bft-labs/cosmos-sdk/store v1.10.0-rc.1.0.20251123071421-2a53c378ae57
+	cosmossdk.io/store => github.com/bft-labs/cosmos-sdk/store v1.10.0-rc.1.0.20251206145318-02fd6029530e
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => github.com/bft-labs/cosmos-sdk v0.53.4-bft-labs-memlogger
